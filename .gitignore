@@ -1,0 +1,7 @@
+venv/
+backend/venv/
+device-simulator/venv/
+__pycache__/
+*.pyc
+node_modules/
+.env
