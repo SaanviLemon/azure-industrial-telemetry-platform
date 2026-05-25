@@ -1,4 +1,4 @@
-
+import requests
 import json
 import random
 import time
@@ -60,7 +60,13 @@ def main():
 
             print("Sending:", telemetry)
             client.send_message(message)
-
+            
+            try:
+                response = requests.post("http://127.0.0.1:8000/telemetry", json=telemetry)
+                print("Backend response:", response.status_code)
+            except requests.exceptions.RequestException:
+                print("Backend not reachable")
+                
             time.sleep(2)
 
     except KeyboardInterrupt:
