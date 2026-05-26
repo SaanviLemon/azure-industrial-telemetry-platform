@@ -46,10 +46,10 @@ Python, FastAPI, React, TypeScript, Azure IoT Hub, Azure App Service, Azure Stat
 ## Screenshots
 
 ### Dashboard
-(Add dashboard screenshot here)
+![alt text](image.png)
 
 ### Swagger API Docs
-(Add Swagger screenshot here)
+![alt text](image-1.png)
 
 ---
 
@@ -83,9 +83,9 @@ npm run dev
 
 ## Future Improvements
 
-- Persistent database storage
-- Authentication and user roles
-- Real IoT hardware integration
-- WebSocket real-time streaming
-- Historical analytics dashboard
-- Docker deployment
+- Replace simulated telemetry with physical Arduino/Raspberry Pi sensor input
+- Store historical telemetry in Azure Cosmos DB or PostgreSQL
+- Add user authentication for protected device dashboards
+- Add WebSocket support for lower-latency real-time updates
+- Implement anomaly detection for predictive maintenance
+- Add CI/CD testing for backend and frontend deployments
