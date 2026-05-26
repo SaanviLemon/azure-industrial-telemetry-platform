@@ -35,7 +35,12 @@ def generate_telemetry():
     voltage = round(random.uniform(11.6, 12.4), 2)
 
     return {
-        "deviceId": "factory-device-001",
+        "deviceId": random.choice([
+            "factory-device-001",
+            "factory-device-002",
+            "factory-device-003"
+        ]),
+        
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "temperature": temperature,
         "voltage": voltage,

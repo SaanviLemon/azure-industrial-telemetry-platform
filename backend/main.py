@@ -1,9 +1,20 @@
+from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timedelta
 from fastapi import FastAPI
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
 
 app = FastAPI(title="Industrial Telemetry Backend")
+device_last_seen = {}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 telemetry_history = []
 alerts = []
@@ -44,9 +55,9 @@ def check_alerts(data: Telemetry):
 def root():
     return {"message": "Telemetry backend running"}
 
-
 @app.post("/telemetry")
 def receive_telemetry(data: Telemetry):
+    device_last_seen[data.deviceId] = datetime.utcnow()
     telemetry_history.append(data.model_dump())
 
     if len(telemetry_history) > 100:
@@ -80,9 +91,17 @@ def get_alerts():
 
 @app.get("/devices")
 def get_devices():
-    device_ids = list(set(item["deviceId"] for item in telemetry_history))
+    devices = []
 
-    return {
-        "devices": device_ids,
-        "count": len(device_ids)
-    }
+    now = datetime.utcnow()
+
+    for device_id, last_seen in device_last_seen.items():
+        online = (now - last_seen) < timedelta(seconds=10)
+
+        devices.append({
+            "deviceId": device_id,
+            "lastSeen": last_seen.isoformat(),
+            "status": "online" if online else "offline"
+        })
+
+    return devices

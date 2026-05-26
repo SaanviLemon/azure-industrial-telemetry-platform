@@ -1,122 +1,188 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import "./App.css";
+
+type Telemetry = {
+  deviceId: string;
+  timestamp?: string;
+  temperature: number;
+  voltage: number;
+  current: number;
+  rpm: number;
+  status: string;
+};
+
+type Alert = {
+  deviceId: string;
+  message: string;
+  timestamp: string;
+  severity: string;
+};
+
+type Device = {
+  deviceId: string;
+  lastSeen: string;
+  status: string;
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [latest, setLatest] = useState<Telemetry | null>(null);
+  const [history, setHistory] = useState<Telemetry[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
+
+  async function fetchData() {
+    try {
+      const latestRes = await fetch("http://127.0.0.1:8000/telemetry/latest");
+      const historyRes = await fetch("http://127.0.0.1:8000/telemetry/history");
+      const alertsRes = await fetch("http://127.0.0.1:8000/alerts");
+      const devicesRes = await fetch("http://127.0.0.1:8000/devices");
+
+      const latestData = await latestRes.json();
+      const historyData = await historyRes.json();
+      const alertsData = await alertsRes.json();
+      const devicesData = await devicesRes.json();
+
+      if (!latestData.message) setLatest(latestData);
+      setHistory(Array.isArray(historyData) ? historyData : []);
+      setAlerts(Array.isArray(alertsData) ? alertsData : []);
+      setDevices(Array.isArray(devicesData) ? devicesData : []);
+    } catch (error) {
+      console.error("Failed to fetch telemetry:", error);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <main className="dashboard">
+      <section className="header">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+          <p className="eyebrow">Azure Industrial Telemetry Platform</p>
+          <h1>Factory Device Monitor</h1>
+          <p className="subtitle">
+            Real-time machine telemetry, device health, and alert monitoring.
           </p>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+        <div className={`status-pill ${latest?.status === "warning" ? "warning" : "normal"}`}>
+          {latest ? latest.status.toUpperCase() : "WAITING"}
         </div>
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <section className="cards">
+        <MetricCard title="Temperature" value={latest?.temperature} unit="°C" />
+        <MetricCard title="Voltage" value={latest?.voltage} unit="V" />
+        <MetricCard title="Current" value={latest?.current} unit="A" />
+        <MetricCard title="RPM" value={latest?.rpm} unit="" />
+      </section>
+
+      <section className="grid">
+        <div className="panel chart-panel">
+          <h2>Temperature Trend</h2>
+          <TelemetryChart data={history} dataKey="temperature" />
+        </div>
+
+        <div className="right-panels">
+          <div className="panel small-chart-panel">
+            <h2>Voltage Trend</h2>
+            <TelemetryChart data={history} dataKey="voltage" />
+          </div>
+
+          <div className="panel small-chart-panel">
+            <h2>Current Trend</h2>
+            <TelemetryChart data={history} dataKey="current" />
+          </div>
+        </div>
+
+        <div className="panel alert-panel">
+          <h2>Recent Alerts</h2>
+          {alerts.length === 0 ? (
+            <p className="muted">No alerts yet.</p>
+          ) : (
+            <div className="alerts">
+              {alerts.slice().reverse().map((alert, index) => (
+                <div className="alert" key={index}>
+                  <strong>{alert.message}</strong>
+                  <span>
+                    {alert.deviceId} •{" "}
+                    {alert.timestamp ? new Date(alert.timestamp).toLocaleTimeString() : "No time"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="panel">
+          <h2>Devices</h2>
+          <div className="devices">
+            {devices.map((device, index) => (
+              <div className="device-row" key={index}>
+                <div>
+                  <strong>{device.deviceId}</strong>
+                </div>
+
+                <div className={`device-status ${device.status}`}>
+                  {device.status}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
+  );
 }
 
-export default App
+function TelemetryChart({
+  data,
+  dataKey,
+}: {
+  data: Telemetry[];
+  dataKey: "temperature" | "voltage" | "current";
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <LineChart data={data}>
+        <XAxis dataKey="timestamp" hide />
+        <YAxis />
+        <Tooltip />
+        <Line type="monotone" dataKey={dataKey} strokeWidth={2} dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+function MetricCard({
+  title,
+  value,
+  unit,
+}: {
+  title: string;
+  value?: number;
+  unit: string;
+}) {
+  return (
+    <div className="metric-card">
+      <p>{title}</p>
+      <h2>
+        {value !== undefined ? value : "--"}
+        <span>{unit}</span>
+      </h2>
+    </div>
+  );
+}
+
+export default App;
