@@ -10,7 +10,11 @@ device_last_seen = {}
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://your-static-web-app-url.azurestaticapps.net"
+    ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
