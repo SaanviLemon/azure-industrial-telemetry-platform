@@ -40,10 +40,10 @@ function App() {
 
   async function fetchData() {
     try {
-      const latestRes = await fetch("http://127.0.0.1:8000/telemetry/latest");
-      const historyRes = await fetch("http://127.0.0.1:8000/telemetry/history");
-      const alertsRes = await fetch("http://127.0.0.1:8000/alerts");
-      const devicesRes = await fetch("http://127.0.0.1:8000/devices");
+      const latestRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/telemetry/latest`);
+      const historyRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/telemetry/history`);
+      const alertsRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/alerts`);
+      const devicesRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/devices`);
 
       const latestData = await latestRes.json();
       const historyData = await historyRes.json();
