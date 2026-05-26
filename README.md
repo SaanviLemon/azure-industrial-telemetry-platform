@@ -8,7 +8,7 @@ The system simulates factory machine telemetry, processes live sensor data throu
 ---
 
 ## Architecture
-
+Device Simulator → Azure IoT Hub → FastAPI Backend → React Dashboard
 ![System Architecture](docs/architecture-diagram.png)
 
 ---
@@ -26,6 +26,7 @@ The system simulates factory machine telemetry, processes live sensor data throu
 ---
 
 ## Tech Stack
+Python, FastAPI, React, TypeScript, Azure IoT Hub, Azure App Service, Azure Static Web Apps
 
 ### Frontend
 - React
